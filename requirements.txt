@@ -1,0 +1,9 @@
+gymnasium
+numpy
+torch
+tyro
+tensorboard
+numba
+pettingzoo
+pygame
+cloudpickle
