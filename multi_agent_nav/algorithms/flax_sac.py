@@ -187,3 +187,115 @@ class Actor(nn.Module):
         log_prob = jax.scipy.stats.norm.logpdf(normal, mean, std) - jnp.log(1 - action**2 + 1e-6)
         log_prob = jnp.sum(log_prob, axis=1, keepdims=True)
         return action_env, log_prob
+
+# =========================================================================================
+# DAD-RL ARCHITECTURE (PyTorch to Flax Translation)
+# -----------------------------------------------------------------------------------------
+# NOTE: This architecture requires temporal sequences (Frame Stacking) to function.
+# The input 'x' must have shape [B, seq_len, feature_dim].
+# Uncomment and use this block when transitioning to the DAD-RL framework in Chapter 6/7.
+# =========================================================================================
+
+# class FlaxObstacleAwarenessBlock(nn.Module):
+#     """
+#     Exact Flax implementation of DAD-RL's Dual-Stream Obstacle Awareness Block.
+#     """
+#     num_beams: int = 64
+#     output_dim: int = 64
+#     
+#     @nn.compact
+#     def __call__(self, lidar):
+#         B = lidar.shape[0]
+#         
+#         # Left Branch (Query Generation)
+#         angles = jnp.linspace(-jnp.pi, jnp.pi, self.num_beams)
+#         angles_batch = jnp.broadcast_to(angles.reshape((1, self.num_beams, 1)), (B, self.num_beams, 1))
+#         
+#         # Semantic Embedding
+#         s = nn.Dense(4)(angles_batch)
+#         
+#         # Geometric Encoding
+#         c = jnp.concatenate([jnp.sin(angles_batch), jnp.cos(angles_batch)], axis=-1)
+#         
+#         # Dynamic Fusion Gate
+#         gate_input = jnp.concatenate([s, c], axis=-1)
+#         g = nn.Dense(1)(gate_input)
+#         g = nn.sigmoid(g)
+#         
+#         # Hybrid Descriptor
+#         h = jnp.concatenate([g * c, (1.0 - g) * s, g], axis=-1)
+#         
+#         # Query Vectors
+#         Q = nn.Dense(16)(h)
+#         
+#         # Right Branch (Key/Value Generation)
+#         lidar_batch = jnp.expand_dims(lidar, axis=-1)
+#         KV = nn.Dense(16)(lidar_batch)
+#         
+#         # Localized Perception Mask (window = +/- 1)
+#         idx = jnp.arange(self.num_beams)
+#         dist_matrix = jnp.abs(jnp.expand_dims(idx, 0) - jnp.expand_dims(idx, 1))
+#         # True where valid (dist <= 1). Shape: [1, num_beams, num_beams]
+#         attn_mask = jnp.expand_dims(dist_matrix <= 1, axis=0) 
+#         
+#         # Localized Perception Modeling (Attention)
+#         attn_out = nn.MultiHeadDotProductAttention(num_heads=1, qkv_features=16)(
+#             inputs_q=Q, inputs_kv=KV, mask=attn_mask
+#         )
+#         
+#         # Spatial Feature Aggregation
+#         flattened = attn_out.reshape((B, -1))
+#         final_feature = nn.Dense(128)(flattened)
+#         final_feature = nn.relu(final_feature)
+#         final_feature = nn.Dense(self.output_dim)(final_feature)
+#         
+#         return final_feature
+#
+# class FlaxSpatioTemporalAttentionEncoder(nn.Module):
+#     """Flax Spatio-Temporal Attention Encoder based on DAD-RL paper."""
+#     embed_dim: int = 56
+#     hidden_dim: int = 56
+#     
+#     @nn.compact
+#     def __call__(self, ego_seq, entity_seqs):
+#         # ego_seq: [B, seq_len, ego_dim]
+#         # entity_seqs: [B, seq_len, num_entities, entity_feature_dim]
+#         B, seq_len, num_entities, _ = entity_seqs.shape
+#         
+#         # Ego Temporal Encoding
+#         ego_emb = nn.Dense(self.embed_dim)(ego_seq)
+#         ego_emb = nn.relu(ego_emb)
+#         
+#         # LSTM processing in Flax using scan
+#         LSTM = nn.RNN(nn.OptimizedLSTMCell(self.hidden_dim), return_carry=True)
+#         (ego_carry, ego_hidden), ego_out = LSTM(ego_emb)
+#         
+#         # The last hidden state
+#         ego_p = jnp.expand_dims(ego_hidden, axis=1) # [B, 1, hidden_dim]
+#         
+#         # Entity Temporal Encoding
+#         entity_flat = entity_seqs.reshape((B * num_entities, seq_len, -1))
+#         entity_emb = nn.Dense(self.embed_dim)(entity_flat[:, :, 1:]) # Remove active flag
+#         entity_emb = nn.relu(entity_emb)
+#         
+#         (ent_carry, ent_hidden), ent_out = LSTM(entity_emb)
+#         ent_p = ent_hidden.reshape((B, num_entities, self.hidden_dim))
+#         
+#         # Attention Mask (True if active/valid)
+#         key_mask = entity_seqs[:, -1, :, 0] > 0.5 # [B, num_entities]
+#         key_mask = jnp.expand_dims(key_mask, axis=1) # [B, 1, num_entities]
+#         
+#         # Multi-head Attention
+#         attn_output = nn.MultiHeadDotProductAttention(num_heads=1, qkv_features=self.hidden_dim)(
+#             inputs_q=ego_p, inputs_kv=ent_p, mask=key_mask
+#         )
+#         
+#         # Residual and Normalization
+#         ego_interactive_enc = nn.LayerNorm()(jnp.squeeze(ego_p, 1) + jnp.squeeze(attn_output, 1))
+#         
+#         # Final output
+#         z_t = jnp.concatenate((ego_seq[:, -1, :], ego_interactive_enc), axis=1)
+#         z_t = nn.Dense(128)(z_t)
+#         z_t = nn.relu(z_t)
+#         
+#         return z_t
