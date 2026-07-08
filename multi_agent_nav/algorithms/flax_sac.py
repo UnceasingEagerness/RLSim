@@ -50,6 +50,50 @@ class EntitySetEncoder(nn.Module):
         has_entities = jnp.expand_dims(jnp.any(mask, axis=1), -1)
         return jnp.where(has_entities, out, jnp.zeros_like(out))
 
+class GNNAttentionEncoder(nn.Module):
+    """Graph Neural Network Encoder using Multi-Head Cross-Attention."""
+    embed_dim: int = 64
+    num_heads: int = 4
+
+    @nn.compact
+    def __call__(self, entities, query_features):
+        # entities shape: [B, num_entities, feature_dim]
+        # query_features shape: [B, query_dim]
+        mask = entities[:, :, 0] > 0.5
+        features = entities[:, :, 1:]
+        
+        # Embed the neighbor features (Keys and Values)
+        kv = nn.Dense(self.embed_dim)(features)
+        kv = nn.relu(kv)
+        kv = nn.Dense(self.embed_dim)(kv)
+        
+        # Embed the query (Ego Kinematics)
+        q = nn.Dense(self.embed_dim)(query_features)
+        # Add sequence dimension for attention [B, 1, embed_dim]
+        q = jnp.expand_dims(q, axis=1)
+        
+        # Cross-Attention mask: True where valid. shape: [B, 1, num_entities]
+        attn_mask = jnp.expand_dims(mask, axis=1)
+        
+        # MultiHeadDotProductAttention computes weighted sum of neighbors based on relevance to Ego
+        attn_out = nn.MultiHeadDotProductAttention(
+            num_heads=self.num_heads, 
+            qkv_features=self.embed_dim, 
+            out_features=self.embed_dim
+        )(inputs_q=q, inputs_kv=kv, mask=attn_mask)
+        
+        # Squeeze the sequence dimension back out -> [B, embed_dim]
+        attn_out = jnp.squeeze(attn_out, axis=1)
+        
+        # Final non-linear processing
+        out = nn.Dense(self.embed_dim)(attn_out)
+        out = nn.relu(out)
+        out = nn.Dense(self.embed_dim)(out)
+        
+        # If no entities exist, zero out the feature
+        has_entities = jnp.expand_dims(jnp.any(mask, axis=1), -1)
+        return jnp.where(has_entities, out, jnp.zeros_like(out))
+
 class ActorBackbone(nn.Module):
     """Decentralized Actor Feature Extractor."""
     layout: dict
@@ -87,6 +131,13 @@ class ActorBackbone(nn.Module):
         
         auv_feat = EntitySetEncoder(embed_dim=64)(slice_entities("auv_entities"))
         moving_feat = EntitySetEncoder(embed_dim=64)(slice_entities("moving_obstacles"))
+        
+        # --- FUTURE GNN UPGRADE (Chapter 6) ---
+        # To use the GNN, comment out the two lines above and uncomment the two lines below:
+        # auv_feat = GNNAttentionEncoder(embed_dim=64, num_heads=4)(slice_entities("auv_entities"), query_features=kin_feat)
+        # moving_feat = GNNAttentionEncoder(embed_dim=64, num_heads=4)(slice_entities("moving_obstacles"), query_features=kin_feat)
+        # --------------------------------------
+        
         lidar_feat = DeepSetOAB(num_points=lidar_spec["dim"]//2, out_features=64)(slice_vector("lidar"))
         
         fused = nn.LayerNorm()(jnp.concatenate([kin_feat, lidar_feat], axis=1))
