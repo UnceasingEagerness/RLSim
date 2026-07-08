@@ -1,0 +1,41 @@
+Step,Throttle Action,Steering Action,Top Throttle Factor 1,Top Throttle Factor 2,Top Throttle Factor 3,Top Steering Factor 1,Top Steering Factor 2,Top Steering Factor 3
+0,1.8736345767974854,-0.714493989944458,Neighbor 3: Relative X,Neighbor 3: Relative Y,Goal: Distance,Goal: Distance,Goal: sin(relative angle),Neighbor 3: Relative Y
+1,2.270494222640991,-0.17400209605693817,Neighbor 3: Relative Y,Neighbor 3: Relative X,Goal: sin(relative angle),Goal: sin(relative angle),Ego: r (yaw rate),Goal: Distance
+2,1.6667773723602295,0.1567300409078598,Neighbor 3: Relative Y,Goal: cos(relative angle),Neighbor 3: Relative X,Ego: r (yaw rate),Neighbor 3: Relative Y,Goal: cos(relative angle)
+3,1.7681169509887695,0.9962287545204163,Neighbor 3: Relative Y,Neighbor 3: Relative X,Ego: u (surge velocity),Ego: r (yaw rate),Goal: cos(relative angle),Neighbor 3: Relative Y
+4,1.6382676362991333,-0.017069557681679726,Neighbor 3: Relative Y,Ego: u (surge velocity),Neighbor 3: Relative X,Neighbor 3: Relative Y,Goal: cos(relative angle),Goal: sin(relative angle)
+5,1.5307848453521729,0.3522971272468567,Neighbor 3: Relative Y,Ego: u (surge velocity),Goal: cos(relative angle),Goal: cos(relative angle),Goal: sin(relative angle),Neighbor 3: Relative Y
+6,1.5197221040725708,0.3394557237625122,Neighbor 3: Relative Y,Ego: u (surge velocity),Goal: cos(relative angle),Goal: cos(relative angle),Goal: sin(relative angle),Neighbor 3: Relative Y
+7,1.5745986700057983,0.1938762366771698,Neighbor 3: Relative Y,Ego: u (surge velocity),Goal: cos(relative angle),Goal: cos(relative angle),Goal: sin(relative angle),Ego: v (sway velocity)
+8,1.6083369255065918,-0.08229699730873108,Neighbor 3: Relative Y,Ego: u (surge velocity),Goal: cos(relative angle),Goal: cos(relative angle),Ego: r (yaw rate),Ego: u (surge velocity)
+9,1.5821157693862915,-0.2467406988143921,Neighbor 3: Relative Y,Ego: u (surge velocity),Goal: cos(relative angle),Goal: cos(relative angle),Ego: r (yaw rate),Ego: u (surge velocity)
+10,1.5819793939590454,-0.30386292934417725,Neighbor 3: Relative Y,Ego: u (surge velocity),Neighbor 3: Relative X,Ego: u (surge velocity),Goal: cos(relative angle),Neighbor 3: Relative Y
+11,1.5710500478744507,-0.32988613843917847,Ego: u (surge velocity),Goal: cos(relative angle),Neighbor 3: Relative Y,Ego: u (surge velocity),Ego: v (sway velocity),Goal: cos(relative angle)
+12,1.5611131191253662,-0.24635794758796692,Goal: cos(relative angle),Ego: u (surge velocity),Goal: Distance,Ego: u (surge velocity),Ego: v (sway velocity),Neighbor 3: Relative Y
+13,1.5602701902389526,-0.240740567445755,Goal: cos(relative angle),Goal: Distance,Ego: u (surge velocity),Ego: u (surge velocity),Ego: v (sway velocity),LiDAR Ray 25 (-39.4 deg)
+14,1.5604488849639893,-0.20390044152736664,Goal: Distance,Goal: cos(relative angle),LiDAR Ray 32 (0.0 deg),Ego: u (surge velocity),Ego: v (sway velocity),LiDAR Ray 25 (-39.4 deg)
+15,1.5645328760147095,-0.18822626769542694,Goal: Distance,LiDAR Ray 32 (0.0 deg),LiDAR Ray 31 (-5.6 deg),Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+16,1.5741647481918335,-0.15938906371593475,Goal: Distance,Ego: u (surge velocity),LiDAR Ray 32 (0.0 deg),Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+17,1.5826029777526855,-0.15640957653522491,Ego: u (surge velocity),Goal: Distance,LiDAR Ray 32 (0.0 deg),Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+18,1.5888571739196777,-0.1639731377363205,Ego: u (surge velocity),Goal: Distance,LiDAR Ray 32 (0.0 deg),Ego: u (surge velocity),Ego: v (sway velocity),Goal: cos(relative angle)
+19,1.5956761837005615,-0.16446252167224884,Ego: u (surge velocity),Goal: Distance,LiDAR Ray 32 (0.0 deg),Ego: u (surge velocity),Ego: v (sway velocity),Goal: cos(relative angle)
+20,1.6125956773757935,-0.16819794476032257,Ego: u (surge velocity),LiDAR Ray 32 (0.0 deg),Goal: Distance,Ego: u (surge velocity),Ego: v (sway velocity),Goal: cos(relative angle)
+21,1.6229256391525269,-0.1642681062221527,Ego: u (surge velocity),LiDAR Ray 32 (0.0 deg),LiDAR Ray 33 (5.6 deg),Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+22,1.6282912492752075,-0.17856699228286743,Ego: u (surge velocity),LiDAR Ray 33 (5.6 deg),LiDAR Ray 32 (0.0 deg),Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+23,1.6361713409423828,-0.18410435318946838,Ego: u (surge velocity),LiDAR Ray 33 (5.6 deg),LiDAR Ray 32 (0.0 deg),Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+24,1.646044373512268,-0.1895536631345749,Ego: u (surge velocity),LiDAR Ray 33 (5.6 deg),LiDAR Ray 34 (11.2 deg),Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+25,1.656830906867981,-0.19465507566928864,Ego: u (surge velocity),Goal: cos(relative angle),LiDAR Ray 34 (11.2 deg),Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+26,1.6679656505584717,-0.1992669552564621,Ego: u (surge velocity),Goal: cos(relative angle),Goal: Distance,Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+27,1.679162859916687,-0.2038104236125946,Ego: u (surge velocity),Goal: cos(relative angle),Goal: Distance,Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+28,1.691190242767334,-0.20796656608581543,Ego: u (surge velocity),Goal: cos(relative angle),Goal: Distance,Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+29,1.704018235206604,-0.21414145827293396,Ego: u (surge velocity),Goal: cos(relative angle),Goal: sin(relative angle),Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+30,1.7172620296478271,-0.22054611146450043,Ego: u (surge velocity),Goal: Distance,Goal: sin(relative angle),Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+31,1.7277686595916748,-0.22635750472545624,Ego: u (surge velocity),Goal: sin(relative angle),Goal: Distance,Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+32,1.7377182245254517,-0.23702268302440643,Ego: u (surge velocity),Goal: sin(relative angle),Goal: Distance,Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+33,1.749513030052185,-0.2491982877254486,Ego: u (surge velocity),Goal: sin(relative angle),Goal: Distance,Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+34,1.7627015113830566,-0.26075661182403564,Goal: sin(relative angle),Ego: u (surge velocity),Goal: Distance,Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+35,1.7750003337860107,-0.27917614579200745,Ego: u (surge velocity),Goal: sin(relative angle),Goal: Distance,Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+36,1.7833868265151978,-0.26578646898269653,Ego: u (surge velocity),Goal: sin(relative angle),Goal: Distance,Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+37,1.7872669696807861,-0.2868565022945404,Ego: u (surge velocity),LiDAR Ray 35 (16.9 deg),LiDAR Ray 34 (11.2 deg),Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+38,1.7861403226852417,-0.2706300616264343,Ego: u (surge velocity),LiDAR Ray 34 (11.2 deg),LiDAR Ray 35 (16.9 deg),Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)
+39,1.7850782871246338,-0.2963303327560425,Ego: u (surge velocity),Goal: cos(relative angle),Goal: sin(relative angle),Ego: u (surge velocity),Ego: v (sway velocity),Goal: sin(relative angle)

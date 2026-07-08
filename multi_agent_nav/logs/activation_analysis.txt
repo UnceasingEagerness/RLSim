@@ -1,0 +1,187 @@
+=== RLSim V2 Deep Neuron Activation Log ===
+Analyzed Agent 0 at Step 0
+
+Layer: ActorBackbone_0.Dense_0.__call__
+Shape: (64,)
+Mean: 0.104 | Max: 3.154 | Min: -2.412
+Top 5 Firing Neurons:
+  Neuron 40: 3.154
+  Neuron 43: 2.711
+  Neuron 29: 2.612
+  Neuron 49: 2.196
+  Neuron 17: 1.932
+--------------------------------------------------
+Layer: ActorBackbone_0.LayerNorm_0.__call__
+Shape: (64,)
+Mean: 0.038 | Max: 3.811 | Min: -2.446
+Top 5 Firing Neurons:
+  Neuron 40: 3.811
+  Neuron 57: 2.837
+  Neuron 49: 2.714
+  Neuron 51: 2.667
+  Neuron 43: 2.133
+--------------------------------------------------
+Layer: ActorBackbone_0.Dense_1.__call__
+Shape: (64,)
+Mean: -4.366 | Max: 16.669 | Min: -24.365
+Top 5 Firing Neurons:
+  Neuron 59: 16.669
+  Neuron 9: 14.312
+  Neuron 12: 7.642
+  Neuron 16: 6.248
+  Neuron 27: 5.394
+--------------------------------------------------
+Layer: ActorBackbone_0.Dense_2.__call__
+Shape: (32,)
+Mean: 0.172 | Max: 2.958 | Min: -2.371
+Top 5 Firing Neurons:
+  Neuron 5: 2.958
+  Neuron 22: 1.606
+  Neuron 0: 1.589
+  Neuron 26: 1.577
+  Neuron 16: 1.562
+--------------------------------------------------
+Layer: ActorBackbone_0.LayerNorm_1.__call__
+Shape: (32,)
+Mean: -0.185 | Max: 1.796 | Min: -2.143
+Top 5 Firing Neurons:
+  Neuron 5: 1.796
+  Neuron 12: 1.336
+  Neuron 21: 1.228
+  Neuron 16: 0.870
+  Neuron 15: 0.670
+--------------------------------------------------
+Layer: ActorBackbone_0.EntitySetEncoder_0.Dense_2.__call__
+Shape: (64,)
+Mean: -0.689 | Max: 0.880 | Min: -3.171
+Top 5 Firing Neurons:
+  Neuron 43: 0.880
+  Neuron 19: 0.385
+  Neuron 15: 0.372
+  Neuron 8: 0.326
+  Neuron 52: 0.116
+--------------------------------------------------
+Layer: ActorBackbone_0.EntitySetEncoder_0.Dense_3.__call__
+Shape: (64,)
+Mean: -0.004 | Max: 0.275 | Min: -0.249
+Top 5 Firing Neurons:
+  Neuron 59: 0.275
+  Neuron 4: 0.265
+  Neuron 46: 0.262
+  Neuron 53: 0.203
+  Neuron 63: 0.200
+--------------------------------------------------
+Layer: ActorBackbone_0.EntitySetEncoder_0.__call__
+Shape: (64,)
+Mean: -0.004 | Max: 0.275 | Min: -0.249
+Top 5 Firing Neurons:
+  Neuron 59: 0.275
+  Neuron 4: 0.265
+  Neuron 46: 0.262
+  Neuron 53: 0.203
+  Neuron 63: 0.200
+--------------------------------------------------
+Layer: ActorBackbone_0.EntitySetEncoder_1.Dense_2.__call__
+Shape: (64,)
+Mean: 0.000 | Max: 0.000 | Min: 0.000
+Top 5 Firing Neurons:
+  Neuron 63: 0.000
+  Neuron 62: 0.000
+  Neuron 61: 0.000
+  Neuron 60: 0.000
+  Neuron 59: 0.000
+--------------------------------------------------
+Layer: ActorBackbone_0.EntitySetEncoder_1.Dense_3.__call__
+Shape: (64,)
+Mean: 0.000 | Max: 0.000 | Min: 0.000
+Top 5 Firing Neurons:
+  Neuron 63: 0.000
+  Neuron 62: 0.000
+  Neuron 61: 0.000
+  Neuron 60: 0.000
+  Neuron 59: 0.000
+--------------------------------------------------
+Layer: ActorBackbone_0.EntitySetEncoder_1.__call__
+Shape: (64,)
+Mean: 0.000 | Max: 0.000 | Min: 0.000
+Top 5 Firing Neurons:
+  Neuron 63: 0.000
+  Neuron 62: 0.000
+  Neuron 61: 0.000
+  Neuron 60: 0.000
+  Neuron 59: 0.000
+--------------------------------------------------
+Layer: ActorBackbone_0.DeepSetOAB_0.Dense_0.__call__
+Shape: (64,)
+Mean: -3.240 | Max: 1.278 | Min: -14.740
+Top 5 Firing Neurons:
+  Neuron 10: 1.278
+  Neuron 20: 0.935
+  Neuron 38: 0.407
+  Neuron 7: 0.323
+  Neuron 42: 0.232
+--------------------------------------------------
+Layer: ActorBackbone_0.DeepSetOAB_0.Dense_1.__call__
+Shape: (64,)
+Mean: -0.181 | Max: 1.676 | Min: -1.433
+Top 5 Firing Neurons:
+  Neuron 30: 1.676
+  Neuron 8: 1.522
+  Neuron 33: 1.204
+  Neuron 58: 0.673
+  Neuron 0: 0.559
+--------------------------------------------------
+Layer: ActorBackbone_0.DeepSetOAB_0.__call__
+Shape: (64,)
+Mean: 0.120 | Max: 1.676 | Min: 0.000
+Top 5 Firing Neurons:
+  Neuron 30: 1.676
+  Neuron 8: 1.522
+  Neuron 33: 1.204
+  Neuron 58: 0.673
+  Neuron 0: 0.559
+--------------------------------------------------
+Layer: ActorBackbone_0.LayerNorm_2.__call__
+Shape: (128,)
+Mean: 0.066 | Max: 2.618 | Min: -0.296
+Top 5 Firing Neurons:
+  Neuron 59: 2.618
+  Neuron 16: 1.877
+  Neuron 27: 1.756
+  Neuron 2: 1.147
+  Neuron 30: 1.053
+--------------------------------------------------
+Layer: ActorBackbone_0.Dense_3.__call__
+Shape: (256,)
+Mean: -2.628 | Max: 2.354 | Min: -8.761
+Top 5 Firing Neurons:
+  Neuron 165: 2.354
+  Neuron 28: 2.127
+  Neuron 20: 2.093
+  Neuron 247: 1.933
+  Neuron 143: 1.801
+--------------------------------------------------
+Layer: ActorBackbone_0.__call__
+Shape: (256,)
+Mean: 0.124 | Max: 2.354 | Min: 0.000
+Top 5 Firing Neurons:
+  Neuron 165: 2.354
+  Neuron 28: 2.127
+  Neuron 20: 2.093
+  Neuron 247: 1.933
+  Neuron 143: 1.801
+--------------------------------------------------
+Layer: Dense_0.__call__
+Shape: (2,)
+Mean: 1.636 | Max: 2.006 | Min: 1.265
+Top 5 Firing Neurons:
+  Neuron 0: 2.006
+  Neuron 1: 1.265
+--------------------------------------------------
+Layer: Dense_1.__call__
+Shape: (2,)
+Mean: -0.740 | Max: -0.579 | Min: -0.902
+Top 5 Firing Neurons:
+  Neuron 0: -0.579
+  Neuron 1: -0.902
+--------------------------------------------------
