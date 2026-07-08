@@ -22,8 +22,8 @@ class EnvParams:
     """Static configuration for the environment."""
     num_agents: int = 5
     max_steps: int = 2000       # Shorter episodes = faster replay buffer diversity
-    map_size: float = 5000.0    # Massive 5km x 5km map
-    num_obstacles: int = struct.field(pytree_node=False, default=300) # Dense minefield
+    map_size: float = 3000.0    # 3km x 3km map
+    num_obstacles: int = struct.field(pytree_node=False, default=100) # Dense minefield
     lidar_range: float = 50.0
     num_lidar_beams: int = struct.field(pytree_node=False, default=64)
     goal_radius: float = 15.0
