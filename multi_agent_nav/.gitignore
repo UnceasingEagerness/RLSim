@@ -34,3 +34,11 @@ venv.bak/
 .idea/
 *.swp
 *.swo
+
+# Training artifacts (large binary files — do not commit)
+checkpoints_*/
+logs_*/
+*.gif
+*.mp4
+debug_motion.py
+stae_attention.gif

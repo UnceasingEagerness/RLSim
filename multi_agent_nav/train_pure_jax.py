@@ -124,6 +124,9 @@ def main():
             orbit_reward_scale      = 3.0,    # Increased from 2.0 to force faster CCW circling
             goal_radius             = 30.0,   # larger on-ring tolerance (vs 15m for nav)
             num_obstacles           = 30,     # reduced from 200 — Stage C Curriculum Constraint
+            # ── Option A: Moving evader (random walk, matches MAPPO paper §IV-A) ──
+            moving_target           = True,   # evader moves randomly each step
+            target_speed            = 1.0,    # 1 m/s random walk speed (MAPPO paper value)
         )
     # ─────────────────────────────────────────────────────
     

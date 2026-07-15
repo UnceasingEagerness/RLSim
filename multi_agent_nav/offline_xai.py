@@ -130,8 +130,13 @@ def main():
     
     def update(frame):
         ax.clear()
-        ax.set_xlim(-400, 400)
-        ax.set_ylim(-400, 400)
+        
+        s = history_state[frame]
+        target = s.target_pos
+        
+        # Zoom the camera tightly around the target (200m window)
+        ax.set_xlim(target[0] - 120, target[0] + 120)
+        ax.set_ylim(target[1] - 120, target[1] + 120)
         ax.set_aspect('equal')
         ax.set_title(f"STAE Cross-Attention | Step {frame}", color="white", fontsize=16)
         

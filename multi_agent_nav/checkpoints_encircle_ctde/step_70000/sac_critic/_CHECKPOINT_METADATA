@@ -1,1 +1,0 @@
-{"item_handlers": "orbax.checkpoint._src.handlers.standard_checkpoint_handler.StandardCheckpointHandler", "metrics": {}, "performance_metrics": {}, "init_timestamp_nsecs": 1784043794342709503, "commit_timestamp_nsecs": 1784043794402078027, "custom_metadata": {}}

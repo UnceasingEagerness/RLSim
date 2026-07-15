@@ -22,6 +22,7 @@ class EnvState:
     target_vel: jnp.ndarray     # [2]  target velocity (used for moving_target)
     prev_ring_dist: jnp.ndarray # [N]  |dist_to_target - d_E|  (unused in nav mode)
     prev_phi_cap: jnp.ndarray   # []   previous uniformity potential
+    orbit_angles: jnp.ndarray   # [N]  each agent's current CCW angle on the orbit ring
 
 @struct.dataclass
 class EnvParams:
@@ -102,7 +103,7 @@ class JaxUSVEnv:
             k_goal, k_obs = jax.random.split(k)
             
             # --- Place Goals ---
-            def place_goals(k, n, hm, min_radius=300.0, max_radius=600.0):
+            def place_goals(k, n, hm, min_radius=90.0, max_radius=250.0):
                 def body_fn(i, val):
                     k, g_xy = val
                     def try_fn(j, try_val):
@@ -214,10 +215,34 @@ class JaxUSVEnv:
                                    jnp.abs(jnp.linalg.norm(init_pos - target_pos[None,:], axis=1)
                                            - params.encircle_radius),
                                    jnp.zeros(params.num_agents))
-        # OPTION B (paper-faithful): all agents navigate to the SAME target center.
-        # The emergent spreading comes purely from r_formation (Paper Eq.14)
-        # and orbiting from r_orbit — NOT from any geometric ring-point carrot.
-        goal_pos_enc = jnp.broadcast_to(target_pos[None, :], (N, 2))
+
+        # ── ROTATING CARROT: Assign each agent a dedicated orbit slot ─────────────
+        # Each agent i gets angle theta_i = i * (2pi/N) + random_offset.
+        # The goal_pos for each agent points to THIS slot on the ring (not the
+        # raw target centroid). This mathematically guarantees circular motion:
+        # each agent simply chases a point that rotates CCW around the target.
+        key_orbit = jax.random.split(key_idx, 1)[0]
+        random_offset = jax.random.uniform(key_orbit, minval=0.0, maxval=2.0 * jnp.pi)
+        base_angles = jnp.arange(N) * (2.0 * jnp.pi / N) + random_offset  # [N]
+        
+        # Compute orbit slot positions
+        orbit_slot_x = target_pos[0] + params.encircle_radius * jnp.cos(base_angles)  # [N]
+        orbit_slot_y = target_pos[1] + params.encircle_radius * jnp.sin(base_angles)  # [N]
+        orbit_slots  = jnp.stack([orbit_slot_x, orbit_slot_y], axis=1)  # [N, 2]
+
+        # Assign slots to agents by nearest-neighbour matching to avoid crossing paths
+        # Simple greedy: sort agents by their angle to target and match to sorted slots
+        agent_angles = jnp.arctan2(init_pos[:, 1] - target_pos[1],
+                                   init_pos[:, 0] - target_pos[0])  # [N]
+        agent_order = jnp.argsort(agent_angles)   # [N] sorted agent indices
+        slot_order  = jnp.argsort(base_angles)    # [N] sorted slot indices
+        # assigned_slot[agent_order[i]] = slot_order[i]
+        assigned_slot = jnp.zeros(N, dtype=jnp.int32)
+        assigned_slot = assigned_slot.at[agent_order].set(slot_order)
+        init_orbit_angles = base_angles[assigned_slot]  # [N]
+
+        # goal_pos for each agent = its assigned orbit slot
+        goal_pos_enc = orbit_slots[assigned_slot]  # [N, 2]
         goal_pos = jnp.where(params.encircle_mode, goal_pos_enc, goal_pos)
 
         state = EnvState(
@@ -232,6 +257,7 @@ class JaxUSVEnv:
             target_vel=target_vel,
             prev_ring_dist=init_ring_dist,
             prev_phi_cap=jnp.array(0.0),
+            orbit_angles=init_orbit_angles,
         )
         
         # Calculate the initial single-frame observation
@@ -256,7 +282,7 @@ class JaxUSVEnv:
 
         tau_u = throttle * 250.0
         tau_r = steering * 100.0
-        tau = jnp.stack([tau_u, jnp.zeros(N), tau_r], axis=1)
+        tau = jnp.stack([tau_u, jnp.zeros_like(tau_u), tau_r], axis=1)
 
         vmap_rk4 = jax.vmap(rk4_step, in_axes=(0, 0, None))
         new_usv_state = vmap_rk4(state.usv_state, tau, params.usv_params)
@@ -377,7 +403,12 @@ class JaxUSVEnv:
                                     -((d_coll - min_dist_any)**2), 
                                     0.0)
 
-            # (d) Terminal Capture Reward
+            # (d-extra) Anti-freeze velocity penalty
+            # Surge speed (body-frame forward velocity u). If near-zero, penalize.
+            surge_speed = jnp.abs(nu[:, 0])  # [N]
+            r_idle = -0.8 * jnp.exp(-surge_speed / 0.15)  # peaks at -0.8 when frozen
+
+            # (e) Terminal Capture Reward
             on_ring   = curr_ring_dist < params.goal_radius
             encircled = jnp.all(on_ring)
             r_cap = jnp.where(encircled, 20.0, 0.0)
@@ -411,6 +442,7 @@ class JaxUSVEnv:
                                 k_form * r_enc_dense + 
                                 k_progress * r_enc_approach + 
                                 k_safety * r_collision + 
+                                r_idle +          # Always active — zero GPU cost
                                 k_time)
             
             # Global Team Reward (average across all agents)
@@ -427,8 +459,19 @@ class JaxUSVEnv:
             # Update target position if moving
             new_target_pos = state.target_pos + state.target_vel * params.usv_params.dt
             new_target_pos = jnp.where(params.moving_target, new_target_pos, state.target_pos)
-            new_goal_pos   = jnp.broadcast_to(new_target_pos[None, :], (N, 2))
-            new_goal_pos   = jnp.where(params.encircle_mode, new_goal_pos, state.goal_pos)
+
+            # ── Advance each agent's orbit slot by orbit_speed radians/step ──────
+            # This is the 'rotating carrot' — the slot moves CCW around the target
+            # each timestep, forcing the agent to continuously orbit to keep up.
+            orbit_speed    = 0.008  # ~0.46 deg/step → full orbit in ~780 steps
+            new_orbit_angles = state.orbit_angles + orbit_speed  # [N]
+
+            # Recompute each agent's new goal position on the updated ring
+            new_slot_x = new_target_pos[0] + params.encircle_radius * jnp.cos(new_orbit_angles)
+            new_slot_y = new_target_pos[1] + params.encircle_radius * jnp.sin(new_orbit_angles)
+            new_goal_pos = jnp.stack([new_slot_x, new_slot_y], axis=1)  # [N, 2]
+            # In nav mode the orbit fields are unused — fall back to static goal_pos
+            new_goal_pos = jnp.where(params.encircle_mode, new_goal_pos, state.goal_pos)
             
             new_state = new_state.replace(
                 goal_pos       = new_goal_pos,
@@ -436,6 +479,7 @@ class JaxUSVEnv:
                 target_vel     = state.target_vel,
                 prev_ring_dist = curr_ring_dist,
                 prev_phi_cap   = curr_phi_cap,
+                orbit_angles   = new_orbit_angles,
             )
             info["on_ring"]         = on_ring
             info["encircled"]       = encircled
