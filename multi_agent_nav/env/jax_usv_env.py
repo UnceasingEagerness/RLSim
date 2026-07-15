@@ -491,7 +491,10 @@ class JaxUSVEnv:
             info["k_progress"]      = jnp.full((N,), k_progress)
             info["k_form"]          = jnp.full((N,), k_form)
             info["k_cap"]           = jnp.full((N,), k_cap)
-            info["r_enc_dense"]     = r_enc_dense
+            info["r_enc_dense"]     = r_enc_dense * k_form
+            info["r_sustain"]       = jnp.full((N,), r_sustain)
+            info["r_idle"]          = r_idle
+            info["r_collision"]     = r_collision * k_safety
             info["curr_phi_cap"]    = curr_phi_cap
             info["gate_active"]     = jnp.full((N,), gate)
             info["max_escape_gap"]  = jnp.full((N,), jnp.max(gaps))

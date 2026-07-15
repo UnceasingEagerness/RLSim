@@ -30,6 +30,10 @@ class RunnerState:
     env_state: EnvState
     obs: jnp.ndarray
     episode_return: jnp.ndarray
+    episode_r_dense: jnp.ndarray
+    episode_r_sustain: jnp.ndarray
+    episode_r_idle: jnp.ndarray
+    episode_r_collision: jnp.ndarray
     actor_state: TrainState
     critic_state: TrainState
     target_critic_params: Any
@@ -217,6 +221,10 @@ def main():
         env_state=init_env_state,
         obs=init_obs, 
         episode_return=jnp.zeros((num_envs, num_agents)),
+        episode_r_dense=jnp.zeros((num_envs, num_agents)),
+        episode_r_sustain=jnp.zeros((num_envs, num_agents)),
+        episode_r_idle=jnp.zeros((num_envs, num_agents)),
+        episode_r_collision=jnp.zeros((num_envs, num_agents)),
         actor_state=actor_state,
         critic_state=critic_state,
         target_critic_params=critic_params,
@@ -280,6 +288,17 @@ def main():
         final_obs = jnp.where(env_done[:, None, None], reset_obs, next_obs)
         final_episode_return = jnp.where(env_done[:, None], 0.0, new_episode_return)
         
+        # Track individual reward components
+        new_ep_r_dense = runner_state.episode_r_dense + info.get("r_enc_dense", jnp.zeros_like(reward))
+        new_ep_r_sustain = runner_state.episode_r_sustain + info.get("r_sustain", jnp.zeros_like(reward))
+        new_ep_r_idle = runner_state.episode_r_idle + info.get("r_idle", jnp.zeros_like(reward))
+        new_ep_r_collision = runner_state.episode_r_collision + info.get("r_collision", jnp.zeros_like(reward))
+
+        final_ep_r_dense = jnp.where(env_done[:, None], 0.0, new_ep_r_dense)
+        final_ep_r_sustain = jnp.where(env_done[:, None], 0.0, new_ep_r_sustain)
+        final_ep_r_idle = jnp.where(env_done[:, None], 0.0, new_ep_r_idle)
+        final_ep_r_collision = jnp.where(env_done[:, None], 0.0, new_ep_r_collision)
+        
         def merge_states(reset_val, next_val):
             shape = (num_envs,) + (1,) * (next_val.ndim - 1)
             return jnp.where(jnp.reshape(env_done, shape), reset_val, next_val)
@@ -331,6 +350,10 @@ def main():
             env_state=final_env_state,
             obs=final_obs,
             episode_return=final_episode_return,
+            episode_r_dense=final_ep_r_dense,
+            episode_r_sustain=final_ep_r_sustain,
+            episode_r_idle=final_ep_r_idle,
+            episode_r_collision=final_ep_r_collision,
             actor_state=new_actor,
             critic_state=new_critic,
             target_critic_params=new_target,
@@ -361,13 +384,17 @@ def main():
             "target_dist": jnp.mean(info.get("dist_to_goal", jnp.zeros_like(reward))),
             "max_gap": jnp.mean(info.get("max_escape_gap", jnp.zeros_like(reward))),
             "radius_mean": jnp.mean(info.get("radius_mean", jnp.zeros_like(reward))),
-            "radius_std": jnp.mean(info.get("radius_std", jnp.zeros_like(reward)))
+            "radius_std": jnp.mean(info.get("radius_std", jnp.zeros_like(reward))),
+            "ep_r_dense": jnp.mean(new_ep_r_dense),
+            "ep_r_sustain": jnp.mean(new_ep_r_sustain),
+            "ep_r_idle": jnp.mean(new_ep_r_idle),
+            "ep_r_collision": jnp.mean(new_ep_r_collision)
         }
         
         return new_runner_state, metrics
 
     # ── JIT Compile the inner scan ───────────────────────────────────────────
-    steps_per_epoch = 10_000
+    steps_per_epoch = 5_000
     num_epochs = total_timesteps // steps_per_epoch
 
     with console.status("[bold cyan]Compiling massive JAX XLA Graph...[/bold cyan]", spinner="dots"):
@@ -413,7 +440,9 @@ def main():
                           f"Coll: {np.mean(epoch_metrics['collision_rate'])*100:.1f}% | "
                           f"Gap: {np.mean(epoch_metrics['max_gap']):.2f} (Idl:1.26) | "
                           f"RadStd: {np.mean(epoch_metrics['radius_std']):.1f}m | "
-                          f"MinDist: {np.min(epoch_metrics['agent_dist_min']):.1f}m")
+                          f"MinDist: {np.min(epoch_metrics['agent_dist_min']):.1f}m\n"
+                          f"          ↳ Σ Dense: {np.mean(epoch_metrics['ep_r_dense']):>6.1f} | Σ Sus: {np.mean(epoch_metrics['ep_r_sustain']):>5.1f} | "
+                          f"Σ Idle: {np.mean(epoch_metrics['ep_r_idle']):>6.1f} | Σ Coll: {np.mean(epoch_metrics['ep_r_collision']):>6.1f}")
                           
             all_metrics.append(epoch_metrics)
     except KeyboardInterrupt:
