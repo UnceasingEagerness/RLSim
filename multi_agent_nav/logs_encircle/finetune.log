@@ -1,0 +1,155 @@
+WARNING:jax._src.xla_bridge:An NVIDIA GPU may be present on this machine, but a CUDA-enabled jaxlib is not installed. Falling back to cpu.
+╭──────────────────────────────────────╮
+│ RLSim V2 (Massive Multi-Agent Swarm) │
+╰──────────────────────────────────────╯
+┏━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Category        ┃ Parameter                 ┃                        Value ┃
+┡━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ Engine          │ Hardware Accelerator      │                        cpu:0 │
+│ Engine          │ JIT Mode                  │ jax.lax.scan + vmap (Double) │
+│ Engine          │ Outer Timesteps           │                      400,000 │
+│ Engine          │ Parallel Envs (E)         │                          128 │
+│ Engine          │ Agents per Env (N)        │                            5 │
+│ Engine          │ Transitions/Step          │                          640 │
+├─────────────────┼───────────────────────────┼──────────────────────────────┤
+│ Environment     │ Max Steps per Ep          │                         2000 │
+│ Environment     │ Map Size                  │                      3000.0m │
+│ Environment     │ Collision Radius          │                         4.0m │
+├─────────────────┼───────────────────────────┼──────────────────────────────┤
+│ Agent (SAC)     │ Observation Dim           │                          920 │
+│ Agent (SAC)     │ Action Dim                │                            2 │
+│ Agent (SAC)     │ Policy LR                 │                       0.0003 │
+└─────────────────┴───────────────────────────┴──────────────────────────────┘
+
+Initializing Replay Buffer on GPU (Zero-Copy)...
+Pre-computing Map Bank (1000 Maps) on GPU...
+✔ Map Bank successfully loaded into memory!
+Resuming from checkpoints_encircle/ checkpoint...
+/home/trizzz/miniconda3/lib/python3.13/site-packages/orbax/checkpoint/_src/serialization/jax_array_handlers.py:925: UserWarning: Sharding info not provided when restoring. Populating sharding info from sharding file. Please note restoration time will be slightly increased due to reading from file. Note also that this option is unsafe when restoring on a different topology than the checkpoint was saved with.
+  warnings.warn(
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+ERROR:root:Device cuda:0 was not found in jax.local_devices().
+Traceback (most recent call last):
+  File "/home/trizzz/AUV_Project/RLSim/multi_agent_nav/train_pure_jax.py", line 414, in <module>
+    main()
+    ~~~~^^
+  File "/home/trizzz/AUV_Project/RLSim/multi_agent_nav/train_pure_jax.py", line 186, in main
+    actor_params  = ckpt.restore(actor_path,  item=actor_params)
+  File "/home/trizzz/miniconda3/lib/python3.13/site-packages/orbax/checkpoint/_src/checkpointers/checkpointer.py", line 316, in restore
+    restored = self._restore(directory, args=ckpt_args)
+  File "/home/trizzz/miniconda3/lib/python3.13/site-packages/orbax/checkpoint/_src/checkpointers/checkpointer.py", line 330, in _restore
+    return self._handler.restore(directory, args=args)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/trizzz/miniconda3/lib/python3.13/site-packages/orbax/checkpoint/_src/handlers/pytree_checkpoint_handler.py", line 871, in restore
+    return self._handler_impl.restore(directory, args=args)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/trizzz/miniconda3/lib/python3.13/site-packages/orbax/checkpoint/_src/handlers/base_pytree_checkpoint_handler.py", line 1082, in restore
+    restored_item = asyncio_utils.run_sync(
+        self._maybe_deserialize(
+            item, value_metadata_tree, param_infos, restore_args
+        )
+    )
+  File "/home/trizzz/miniconda3/lib/python3.13/site-packages/orbax/checkpoint/_src/asyncio_utils.py", line 53, in run_sync
+    return asyncio.run(coro)
+           ~~~~~~~~~~~^^^^^^
+  File "/home/trizzz/miniconda3/lib/python3.13/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/home/trizzz/miniconda3/lib/python3.13/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/home/trizzz/miniconda3/lib/python3.13/asyncio/base_events.py", line 725, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/home/trizzz/miniconda3/lib/python3.13/site-packages/orbax/checkpoint/_src/handlers/base_pytree_checkpoint_handler.py", line 807, in _maybe_deserialize
+    deserialized_batches = await self._async_io_engine.execute_restore(
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        batch_requests
+        ^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/trizzz/miniconda3/lib/python3.13/site-packages/orbax/checkpoint/_src/serialization/async_io_engine.py", line 234, in execute_restore
+    deserialized_batches = await asyncio.gather(*deserialized_batches_ops)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/trizzz/miniconda3/lib/python3.13/site-packages/orbax/checkpoint/_src/serialization/jax_array_handlers.py", line 1543, in deserialize
+    ret = await _deserialize_arrays(
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/home/trizzz/miniconda3/lib/python3.13/site-packages/orbax/checkpoint/_src/serialization/jax_array_handlers.py", line 1048, in _deserialize_arrays
+    (ret, logical_bytes), array_metadatas = await asyncio.gather(
+                                            ^^^^^^^^^^^^^^^^^^^^^
+    ...<9 lines>...
+    )
+    ^
+  File "/home/trizzz/miniconda3/lib/python3.13/site-packages/orbax/checkpoint/_src/serialization/jax_array_handlers.py", line 1039, in _async_deserialize
+    results = await asyncio.gather(*deserialize_ops)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/trizzz/miniconda3/lib/python3.13/site-packages/orbax/checkpoint/_src/serialization/serialization.py", line 412, in async_deserialize
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: sharding passed to deserialization should be specified, concrete and an instance of `jax.sharding.Sharding`. Got None

@@ -20,20 +20,22 @@ class JaxReplayBuffer:
     """
     A replay buffer where all data lives permanently on the GPU as a JAX PyTree.
     This entirely eliminates CPU-GPU data transfer during sampling.
+    Modified for CTDE to store JOINT transitions [B, N, ...].
     """
-    def __init__(self, max_size: int, obs_dim: int, action_dim: int):
+    def __init__(self, max_size: int, num_agents: int, obs_dim: int, action_dim: int):
         self.max_size = max_size
+        self.num_agents = num_agents
         self.obs_dim = obs_dim
         self.action_dim = action_dim
 
     def init_state(self) -> ReplayBufferState:
         """Initializes the empty buffers on the GPU."""
         return ReplayBufferState(
-            obs=jnp.zeros((self.max_size, self.obs_dim), dtype=jnp.float32),
-            actions=jnp.zeros((self.max_size, self.action_dim), dtype=jnp.float32),
-            rewards=jnp.zeros((self.max_size,), dtype=jnp.float32),
-            next_obs=jnp.zeros((self.max_size, self.obs_dim), dtype=jnp.float32),
-            dones=jnp.zeros((self.max_size,), dtype=jnp.bool_),
+            obs=jnp.zeros((self.max_size, self.num_agents, self.obs_dim), dtype=jnp.float32),
+            actions=jnp.zeros((self.max_size, self.num_agents, self.action_dim), dtype=jnp.float32),
+            rewards=jnp.zeros((self.max_size, self.num_agents), dtype=jnp.float32),
+            next_obs=jnp.zeros((self.max_size, self.num_agents, self.obs_dim), dtype=jnp.float32),
+            dones=jnp.zeros((self.max_size, self.num_agents), dtype=jnp.bool_),
             count=jnp.array(0, dtype=jnp.int32),
             pos=jnp.array(0, dtype=jnp.int32),
             max_size=jnp.array(self.max_size, dtype=jnp.int32)
@@ -41,8 +43,8 @@ class JaxReplayBuffer:
 
     @staticmethod
     @jax.jit
-    def add(state: ReplayBufferState, obs: jnp.ndarray, action: jnp.ndarray, reward: float, next_obs: jnp.ndarray, done: bool) -> ReplayBufferState:
-        """Adds a single transition to the buffer. Can be vmapped for batched envs."""
+    def add(state: ReplayBufferState, obs: jnp.ndarray, action: jnp.ndarray, reward: jnp.ndarray, next_obs: jnp.ndarray, done: jnp.ndarray) -> ReplayBufferState:
+        """Adds a single joint transition to the buffer."""
         pos = state.pos
         
         new_obs = state.obs.at[pos].set(obs)
@@ -67,8 +69,7 @@ class JaxReplayBuffer:
     @staticmethod
     @functools.partial(jax.jit, static_argnames=['batch_size'])
     def add_batch(state: ReplayBufferState, obs: jnp.ndarray, action: jnp.ndarray, reward: jnp.ndarray, next_obs: jnp.ndarray, done: jnp.ndarray, batch_size: int) -> ReplayBufferState:
-        """Adds a batch of E transitions to the buffer."""
-        # Calculate the indices for the batch
+        """Adds a batch of joint transitions to the buffer."""
         indices = (state.pos + jnp.arange(batch_size)) % state.max_size
         
         new_obs = state.obs.at[indices].set(obs)
@@ -93,7 +94,7 @@ class JaxReplayBuffer:
     @staticmethod
     @functools.partial(jax.jit, static_argnames=['batch_size'])
     def sample(state: ReplayBufferState, key: jax.random.PRNGKey, batch_size: int) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
-        """Samples a batch of transitions from the buffer."""
+        """Samples a batch of joint transitions from the buffer."""
         idxs = jax.random.randint(key, shape=(batch_size,), minval=0, maxval=state.count)
         
         return (

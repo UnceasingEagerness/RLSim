@@ -1,0 +1,37 @@
+Experiment:
+  name: Variant4_STAE_Max_Curriculum
+  date: "2026-07-13"
+  git_commit: "f9835f2db6619968b6216263a5be1513c22b54f1"
+
+Architecture:
+  STAE: true
+  EntityMax: true
+  LiDAREncoder: CNNOAB
+  GoalEncoder: MLP
+  Fusion: Concatenation
+
+Training:
+  seed: 42
+  total_timesteps: 400000
+  num_envs: 1024
+  num_agents: 5
+  alpha: auto
+  warm_start_ckpt: checkpoints_max
+
+Reward:
+  k_progress_init: 4.0
+  k_progress_final: 0.5
+  k_form_final: 5.0
+  k_capture_final: 8.0
+  k_safety_init: 5.0
+  k_safety_final: 4.0
+  k_time_init: -0.2
+  k_time_final: -1.0
+  gate_distance_factor: 2.5
+  gate_majority_rule: true
+
+Environment:
+  encircle_radius: 80
+  goal_radius: 30
+  num_obstacles: 30
+  moving_target: false

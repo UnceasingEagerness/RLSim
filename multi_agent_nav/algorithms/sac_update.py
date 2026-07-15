@@ -12,29 +12,44 @@ class Transition(NamedTuple):
     done: jnp.ndarray
 
 def update_critic(critic_state: TrainState, target_critic_params: Any, actor_state: TrainState, log_alpha: jnp.ndarray, transitions: Transition, gamma: float, key: jax.random.PRNGKey):
-    """Computes the loss and gradients for the SAC Critic."""
+    """Computes the loss and gradients for the CTDE Centralized Critic."""
+    # Joint observations: [B, N, ...]
     obs      = transitions.obs
     action   = transitions.action
-    reward   = transitions.reward   # [B]
+    reward   = transitions.reward
     next_obs = transitions.next_obs
-    done     = transitions.done     # [B]
+    done     = transitions.done
+    
+    B, N, _ = obs.shape
+    
+    # Global reward is sum of individual rewards
+    global_reward = jnp.sum(reward, axis=1) # [B]
+    # Global done if ANY agent is done
+    global_done = jnp.any(done, axis=1).astype(jnp.float32) # [B]
 
-    # 1. Get next actions + log probs from current policy
-    next_action, next_log_prob = actor_state.apply_fn(
-        {"params": actor_state.params}, next_obs, key, method="get_action"
+    # 1. Get next actions + log probs from decentralized current policy
+    # Reshape to [B*N, obs_dim] for the Actor
+    next_obs_flat = next_obs.reshape((B * N, -1))
+    next_action_flat, next_log_prob_flat = actor_state.apply_fn(
+        {"params": actor_state.params}, next_obs_flat, key, method="get_action"
     )
-    next_log_prob = next_log_prob.squeeze(-1)  # [B]
+    
+    next_action = next_action_flat.reshape((B, N, -1))
+    next_log_prob = next_log_prob_flat.reshape((B, N))
+    
+    # Global entropy is the sum of individual entropies
+    global_log_prob = jnp.sum(next_log_prob, axis=1) # [B]
 
-    # 2. Compute target Q using target network
-    #    SoftQNetwork returns [B, 1] — squeeze to [B] to avoid shape mismatch
+    # 2. Compute target Q using Centralized Target Critic
+    # CentralizedSoftQNetwork takes [B, N, obs_dim] and [B, N, act_dim]
     q_target = critic_state.apply_fn(
         {"params": target_critic_params}, next_obs, next_action
     ).squeeze(-1)  # [B]
 
     alpha = jnp.exp(log_alpha)
-    # Bellman backup — done mask prevents bootstrapping past terminal states
-    target_q = reward + (1.0 - done.astype(jnp.float32)) * gamma * (
-        q_target - alpha * next_log_prob
+    # Bellman backup for joint state
+    target_q = global_reward + (1.0 - global_done) * gamma * (
+        q_target - alpha * global_log_prob
     )  # [B]
 
     def critic_loss_fn(params):
@@ -47,28 +62,39 @@ def update_critic(critic_state: TrainState, target_critic_params: Any, actor_sta
     return new_critic_state, loss
 
 def update_actor(actor_state: TrainState, critic_state: TrainState, log_alpha: jnp.ndarray, obs: jnp.ndarray, key: jax.random.PRNGKey):
-    """Computes the loss and gradients for the SAC Actor."""
+    """Computes the loss and gradients for the CTDE Actor."""
+    # obs: [B, N, obs_dim]
+    B, N, _ = obs.shape
 
     def actor_loss_fn(params):
-        action, log_prob = actor_state.apply_fn(
-            {"params": params}, obs, key, method="get_action"
+        obs_flat = obs.reshape((B * N, -1))
+        action_flat, log_prob_flat = actor_state.apply_fn(
+            {"params": params}, obs_flat, key, method="get_action"
         )
-        log_prob = log_prob.squeeze(-1)  # [B]
-        q_value  = critic_state.apply_fn(
+        
+        action = action_flat.reshape((B, N, -1))
+        log_prob = log_prob_flat.reshape((B, N))
+        
+        # Centralized Critic evaluates the JOINT action
+        q_value = critic_state.apply_fn(
             {"params": critic_state.params}, obs, action
         ).squeeze(-1)  # [B]
+        
+        global_log_prob = jnp.sum(log_prob, axis=1) # [B]
         alpha = jnp.exp(log_alpha)
-        # SAC actor maximises Q while maintaining entropy
-        loss = jnp.mean(alpha * log_prob - q_value)
-        return loss, log_prob
+        
+        # SAC actor maximises Global Q while maintaining Global entropy
+        loss = jnp.mean(alpha * global_log_prob - q_value)
+        
+        return loss, log_prob_flat
 
-    (loss, log_prob), grads = jax.value_and_grad(actor_loss_fn, has_aux=True)(actor_state.params)
+    (loss, log_prob_flat), grads = jax.value_and_grad(actor_loss_fn, has_aux=True)(actor_state.params)
     new_actor_state = actor_state.apply_gradients(grads=grads)
-    return new_actor_state, loss, log_prob
+    return new_actor_state, loss, log_prob_flat
 
 def update_alpha(log_alpha: jnp.ndarray, opt_state: Any, log_prob: jnp.ndarray, target_entropy: float, optimizer: optax.GradientTransformation):
     """Updates the temperature parameter alpha."""
-    
+    # log_prob here is flattened from actor [B*N]. target_entropy is per-agent.
     def alpha_loss_fn(log_alpha):
         alpha = jnp.exp(log_alpha)
         loss = -jnp.mean(alpha * (log_prob + target_entropy))
