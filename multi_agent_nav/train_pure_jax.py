@@ -200,7 +200,13 @@ def main():
     else:
         console.print("[bold yellow]No checkpoint found — training from scratch.[/bold yellow]")
     
-    actor_state = TrainState.create(apply_fn=actor.apply, params=actor_params, tx=optax.chain(optax.clip_by_global_norm(1.0), optax.adam(learning_rate=policy_lr)))
+    if ENCIRCLE_MODE:
+        # [Fix 7b] Actor LR warmup post-freeze to prevent catastrophic update spikes
+        actor_lr_schedule = optax.linear_schedule(init_value=0.0, end_value=policy_lr, transition_steps=2000)
+    else:
+        actor_lr_schedule = policy_lr
+    
+    actor_state = TrainState.create(apply_fn=actor.apply, params=actor_params, tx=optax.chain(optax.clip_by_global_norm(1.0), optax.adam(learning_rate=actor_lr_schedule)))
     critic_state = TrainState.create(apply_fn=critic.apply, params=critic_params, tx=optax.chain(optax.clip_by_global_norm(1.0), optax.adam(learning_rate=q_lr)))
     
     log_alpha = jnp.array(0.5)  # Start with higher entropy = more exploration
