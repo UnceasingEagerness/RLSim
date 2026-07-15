@@ -294,18 +294,22 @@ def main():
             key_critic, key_actor = jax.random.split(update_key)
             new_critic, q_loss = update_critic(runner_state.critic_state, runner_state.target_critic_params, runner_state.actor_state, runner_state.log_alpha, batch, gamma, key_critic)
             
-            # [Fix 7] Freeze Actor to let Critic catch up. We compute the actor update anyway to get log_prob for alpha, 
-            # but throw away the new_actor parameters if we are in the freeze window.
-            new_actor_cand, a_loss, log_prob = update_actor(runner_state.actor_state, new_critic, runner_state.log_alpha, batch.obs, key_actor)
-            
-            new_actor = jax.lax.cond(
+            # [Fix 7] Freeze Actor to let Critic catch up.
+            # Wrap both actor and alpha updates in a lax.cond so we don't compute wasted backward passes.
+            def unfreeze_actor(_):
+                n_act, a_ls, l_prb = update_actor(runner_state.actor_state, new_critic, runner_state.log_alpha, batch.obs, key_actor)
+                n_l_alpha, n_a_opt, a_ls_opt = update_alpha(runner_state.log_alpha, runner_state.alpha_opt_state, l_prb, target_entropy, alpha_optimizer)
+                return n_act, n_l_alpha, n_a_opt, a_ls, a_ls_opt
+
+            def freeze_actor(_):
+                return runner_state.actor_state, runner_state.log_alpha, runner_state.alpha_opt_state, 0.0, 0.0
+                
+            new_actor, new_log_alpha, new_alpha_opt, a_loss, alpha_loss = jax.lax.cond(
                 runner_state.step_count >= actor_freeze_steps,
-                lambda _: new_actor_cand,
-                lambda _: runner_state.actor_state,
+                unfreeze_actor,
+                freeze_actor,
                 operand=None
             )
-            
-            new_log_alpha, new_alpha_opt, alpha_loss = update_alpha(runner_state.log_alpha, runner_state.alpha_opt_state, log_prob, target_entropy, alpha_optimizer)
             
             new_target = jax.tree_util.tree_map(
                 lambda t, c: tau_target * c + (1 - tau_target) * t,
