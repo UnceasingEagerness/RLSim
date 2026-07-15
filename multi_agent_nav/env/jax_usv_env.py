@@ -394,19 +394,25 @@ class JaxUSVEnv:
             sigma_gaps = jnp.std(norm_gaps)
             
             curr_phi_cap = jnp.exp(-sigma_gaps)
-            r_enc_dense = jnp.full((N,), curr_phi_cap - state.prev_phi_cap)
+            r_enc_dense = jnp.full((N,), curr_phi_cap) # [Fix 1] Magnitude term, not delta
 
             # (c) Collision Avoidance Penalty (Continuous)
             d_coll = 6.0
             min_dist_any = jnp.minimum(min_agent_dist, min_dist_obs) # [N]
             r_collision = jnp.where(min_dist_any < d_coll, 
-                                    -((d_coll - min_dist_any)**2), 
+                                    -jnp.minimum(((d_coll - min_dist_any)**2), 30.0), # [Fix 4] Cap penalty
                                     0.0)
 
             # (d-extra) Anti-freeze velocity penalty
-            # Surge speed (body-frame forward velocity u). If near-zero, penalize.
+            # [Fix 2] Soft linear penalty ramp, decaying across Phase B
             surge_speed = jnp.abs(nu[:, 0])  # [N]
-            r_idle = -0.8 * jnp.exp(-surge_speed / 0.15)  # peaks at -0.8 when frozen
+            p = params.global_progress
+            
+            def sigmoid(x, center, steepness=15.0):
+                return 1.0 / (1.0 + jnp.exp(-steepness * (x - center)))
+
+            k_idle = 0.8 * (1.0 - sigmoid(p, 0.5))
+            r_idle = -k_idle * jnp.clip((0.15 - surge_speed) / 0.15, 0.0, 1.0)
 
             # (e) Terminal Capture Reward
             on_ring   = curr_ring_dist < params.goal_radius
@@ -415,11 +421,6 @@ class JaxUSVEnv:
 
             # Combine components (Weighted sum)
             # --- Curriculum Reward Annealing ---
-            p = params.global_progress
-            
-            def sigmoid(x, center, steepness=15.0):
-                return 1.0 / (1.0 + jnp.exp(-steepness * (x - center)))
-
             # Progress drops smoothly (Cosine decay) 4.0 -> 0.5
             k_progress = 0.5 + 3.5 * 0.5 * (1.0 + jnp.cos(p * jnp.pi))
             
@@ -427,27 +428,30 @@ class JaxUSVEnv:
             k_safety = 5.0 - 1.0 * p
             
             # Formation rises early (around p=0.3) 0.0 -> 5.0
-            # GATED: Only activate formation if a majority of agents are within 2.5 * encircle_radius
-            gate_dist = 2.5 * params.encircle_radius
-            is_near_target = jnp.mean(dist_to_target < gate_dist) > 0.5
-            k_form = jnp.where(is_near_target, 5.0 * sigmoid(p, 0.3), 0.0)
+            # [Fix 5] Soft gate based on mean distance
+            gate = sigmoid((200.0 - jnp.mean(dist_to_target)) / 30.0, 0.0, steepness=1.0)
+            k_form = 5.0 * sigmoid(p, 0.3) * gate
             
             # Capture rises late (around p=0.7) 0.0 -> 8.0
             k_cap = 8.0 * sigmoid(p, 0.7)
             
+            # [Fix 3] Continuous per-step bonus for agents maintaining the ring
+            n_agents_on_ring = jnp.sum(on_ring)
+            k_sustain = 1.0 * sigmoid(p, 0.5) * gate
+            r_sustain = k_sustain * (n_agents_on_ring / N)
+            
             # Time penalty (Linear) -0.2 -> -1.0
             k_time = -0.2 - 0.8 * p
 
-            total_enc_reward = (k_cap * r_cap + 
-                                k_form * r_enc_dense + 
-                                k_progress * r_enc_approach + 
-                                k_safety * r_collision + 
-                                r_idle +          # Always active — zero GPU cost
-                                k_time)
+            # [Fix 6] Credit Assignment Split
+            # Joint Team Rewards (Averaged)
+            team_reward = jnp.mean(k_cap * r_cap + k_form * r_enc_dense + r_sustain)
             
-            # Global Team Reward (average across all agents)
-            global_reward = jnp.mean(total_enc_reward)
-            enc_reward = jnp.full((N,), global_reward)
+            # Local Agent Rewards (Individual)
+            local_reward = k_progress * r_enc_approach + k_safety * r_collision + r_idle + k_time
+            
+            total_enc_reward = team_reward + local_reward
+            enc_reward = total_enc_reward
 
             # Termination: all agents on ring simultaneously = success
             enc_done = encircled | timeout | collision
@@ -489,7 +493,7 @@ class JaxUSVEnv:
             info["k_cap"]           = jnp.full((N,), k_cap)
             info["r_enc_dense"]     = r_enc_dense
             info["curr_phi_cap"]    = curr_phi_cap
-            info["gate_active"]     = jnp.full((N,), is_near_target)
+            info["gate_active"]     = jnp.full((N,), gate)
             info["max_escape_gap"]  = jnp.full((N,), jnp.max(gaps))
             
             centroid = jnp.mean(pos, axis=0)

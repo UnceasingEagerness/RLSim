@@ -82,7 +82,8 @@ def main():
     # Fine-tuning run: 400k steps. It will auto-load the 600k checkpoint
     # and train further to improve spreading and orbiting speed.
     total_timesteps = 400_000
-    learning_starts = 10_000   
+    learning_starts = 5_000 if ENCIRCLE_MODE else 10_000   
+    actor_freeze_steps = 15_000 if ENCIRCLE_MODE else 0
     batch_size = 256
     buffer_size = 100_000    # 2 Million capacity for massive swarms
     gamma = 0.99
@@ -235,7 +236,12 @@ def main():
             action, _ = actor.apply({"params": runner_state.actor_state.params}, flat_obs, action_key, method=actor.get_action)
             return action
             
-        flat_action = jax.lax.cond(runner_state.step_count < learning_starts, explore_fn, exploit_fn)
+        if ENCIRCLE_MODE:
+            # Warm-started actor knows how to drive — use its stochastic policy for rollout!
+            flat_action = exploit_fn()
+        else:
+            flat_action = jax.lax.cond(runner_state.step_count < learning_starts, explore_fn, exploit_fn)
+            
         action = flat_action.reshape(num_envs, num_agents, action_dim)
         
         # Compute dynamic Curriculum Progress (freeze at 250,000 steps)
@@ -281,7 +287,18 @@ def main():
             
             key_critic, key_actor = jax.random.split(update_key)
             new_critic, q_loss = update_critic(runner_state.critic_state, runner_state.target_critic_params, runner_state.actor_state, runner_state.log_alpha, batch, gamma, key_critic)
-            new_actor, a_loss, log_prob = update_actor(runner_state.actor_state, new_critic, runner_state.log_alpha, batch.obs, key_actor)
+            
+            # [Fix 7] Freeze Actor to let Critic catch up. We compute the actor update anyway to get log_prob for alpha, 
+            # but throw away the new_actor parameters if we are in the freeze window.
+            new_actor_cand, a_loss, log_prob = update_actor(runner_state.actor_state, new_critic, runner_state.log_alpha, batch.obs, key_actor)
+            
+            new_actor = jax.lax.cond(
+                runner_state.step_count >= actor_freeze_steps,
+                lambda _: new_actor_cand,
+                lambda _: runner_state.actor_state,
+                operand=None
+            )
+            
             new_log_alpha, new_alpha_opt, alpha_loss = update_alpha(runner_state.log_alpha, runner_state.alpha_opt_state, log_prob, target_entropy, alpha_optimizer)
             
             new_target = jax.tree_util.tree_map(
